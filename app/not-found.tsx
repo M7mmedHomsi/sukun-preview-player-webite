@@ -1,12 +1,15 @@
-import { Stores } from "./stores";
+import { STRINGS } from "@/lib/strings";
+import { Brand, GetSukun } from "./stores";
 
 export default function NotFound() {
   return (
-    <main className="card">
-      <img className="logo" src="/icon.png" alt="" />
-      <h1 style={{ marginTop: 16 }}>Sukun · سُكون</h1>
-      <p className="about">This page doesn't exist. · هذه الصفحة غير موجودة.</p>
-      <Stores appStore={process.env.APP_STORE_URL} />
-    </main>
+    <div className="stage">
+      <Brand />
+      <main className="gone">
+        <h1>This page doesn&apos;t exist.</h1>
+        <p className="about">هذه الصفحة غير موجودة.</p>
+      </main>
+      <GetSukun t={STRINGS.en} appStore={process.env.APP_STORE_URL} />
+    </div>
   );
 }
