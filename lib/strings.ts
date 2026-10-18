@@ -19,6 +19,7 @@ export const STRINGS = {
     play: "Play",
     pause: "Pause",
     seek: "Position in the session",
+    appOnly: "This session plays in the Sukun app.",
   },
   ar: {
     shared: "شاركه معك أحدهم من سُكون",
@@ -37,6 +38,7 @@ export const STRINGS = {
     play: "تشغيل",
     pause: "إيقاف مؤقت",
     seek: "الموضع في الجلسة",
+    appOnly: "تُشغَّل هذه الجلسة في تطبيق سُكون.",
   },
 } as const;
 

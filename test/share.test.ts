@@ -11,8 +11,8 @@ const good = {
     minutes: 10,
     cover: "https://abc.supabase.co/storage/v1/object/public/covers/a.webp",
     colours: ["#3067D4", "not-a-colour"],
-    audio_url: "https://abc.supabase.co/storage/v1/object/sign/audio/a.m4a?token=t",
-    audio_expires_in: 7200,
+    stream_url: "https://abc.supabase.co/functions/v1/share/UHY8Ggs6fj/play.m3u8?t=1800000000.abc",
+    stream_expires_in: 1800,
     stores: { app_store: null, google_play: "https://play.google.com/store/apps/details?id=ae.appzone.sukun" },
   },
 };
@@ -28,8 +28,14 @@ describe("parseShare", () => {
   it("treats a failed or malformed answer as gone", () => {
     expect(parseShare({ success: false, data: null })).toBeNull();
     expect(parseShare({ success: true, data: { ...good.data, code: "../etc" } })).toBeNull();
-    expect(parseShare({ success: true, data: { ...good.data, audio_url: "javascript:alert(1)" } })).toBeNull();
     expect(parseShare("nope")).toBeNull();
+  });
+
+  it("keeps only a playlist address as the stream, never a file", () => {
+    expect(parseShare(good)?.stream_url).toContain("/play.m3u8?t=");
+    expect(parseShare({ ...good, data: { ...good.data, stream_url: "https://abc.supabase.co/audio/a.m4a" } })?.stream_url).toBeNull();
+    expect(parseShare({ ...good, data: { ...good.data, stream_url: "javascript:alert(1)" } })?.stream_url).toBeNull();
+    expect(parseShare({ ...good, data: { ...good.data, stream_url: null } })?.stream_url).toBeNull();
   });
 
   it("drops a cover that is not https", () => {

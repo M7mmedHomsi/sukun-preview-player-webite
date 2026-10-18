@@ -14,16 +14,42 @@ function clock(seconds: number): string {
 }
 
 /**
- * Sukun's own player for the shared session: play/pause, a seek bar and
- * the time. The browser's built-in controls are never shown, because
- * their menu offers "Download" (Chrome) and their right-click offers
- * "Save audio as" (client 2026-10-18: "they shouldn't download it").
+ * Sukun's own player for the shared session, streaming the encrypted HLS
+ * rendition (client 2026-10-18: "it should be encrypted ... they shouldn't
+ * download it"). The audio arrives as AES-128 pieces; the key comes from
+ * the share function only with this visit's short-lived token. There is no
+ * file to save, and the browser's own controls (their menu offers
+ * "Download") are never shown. hls.js plays it where the browser can't
+ * play HLS itself (Chrome, Firefox); iPhone and Safari play it natively.
  */
-export function Player({ src, labels }: { src: string; labels: Labels }) {
+export function Player({ stream, labels }: { stream: string; labels: Labels }) {
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    const a = audio.current;
+    if (!a) return;
+    let hls: { destroy(): void } | null = null;
+    let cancelled = false;
+    (async () => {
+      const { default: Hls } = await import("hls.js");
+      if (cancelled) return;
+      if (Hls.isSupported()) {
+        const h = new Hls({ enableWorker: true, maxBufferLength: 30 });
+        h.loadSource(stream);
+        h.attachMedia(a);
+        hls = h;
+      } else if (a.canPlayType("application/vnd.apple.mpegurl")) {
+        a.src = stream;
+      }
+    })();
+    return () => {
+      cancelled = true;
+      hls?.destroy();
+    };
+  }, [stream]);
 
   useEffect(() => {
     const a = audio.current;
@@ -96,7 +122,6 @@ export function Player({ src, labels }: { src: string; labels: Labels }) {
       {/* No `controls`: nothing of the browser's own player is ever shown. */}
       <audio
         ref={audio}
-        src={src}
         preload="metadata"
         controlsList="nodownload noplaybackrate noremoteplayback"
         onContextMenu={(e) => e.preventDefault()}

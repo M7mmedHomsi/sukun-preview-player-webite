@@ -80,7 +80,11 @@ export default async function SharePage({ params }: Props) {
         <h1>{title}</h1>
         {share.minutes ? <p className="minutes">{t.minutes(share.minutes)}</p> : null}
         {about ? <p className="about">{about}</p> : null}
-        <Player src={share.audio_url} labels={{ play: t.play, pause: t.pause, seek: t.seek }} />
+        {share.stream_url ? (
+          <Player stream={share.stream_url} labels={{ play: t.play, pause: t.pause, seek: t.seek }} />
+        ) : (
+          <p className="app-only">{t.appOnly}</p>
+        )}
       </main>
       <GetSukun t={t} appStore={share.stores.app_store} googlePlay={share.stores.google_play} />
     </div>

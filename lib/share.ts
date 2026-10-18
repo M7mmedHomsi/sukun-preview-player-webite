@@ -8,8 +8,9 @@ export interface Share {
   minutes: number | null;
   cover: string | null;
   colours: string[];
-  audio_url: string;
-  audio_expires_in: number;
+  /** The encrypted HLS playlist (a short-lived token in it); null when the
+   *  session has no encrypted rendition yet: the page then points to the app. */
+  stream_url: string | null;
   stores: { app_store: string | null; google_play: string };
 }
 
@@ -30,7 +31,10 @@ export function parseShare(body: unknown): Share | null {
   const d = envelope.data as Partial<Share>;
   if (typeof d.code !== "string" || !CODE.test(d.code)) return null;
   if (!d.title || typeof d.title.en !== "string" || typeof d.title.ar !== "string") return null;
-  if (typeof d.audio_url !== "string" || !d.audio_url.startsWith("http")) return null;
+  const stream =
+    typeof d.stream_url === "string" && /^https?:\/\/[^\s"]+\/play\.m3u8\?t=/.test(d.stream_url)
+      ? d.stream_url
+      : null;
   return {
     code: d.code,
     title: d.title,
@@ -41,8 +45,7 @@ export function parseShare(body: unknown): Share | null {
     minutes: typeof d.minutes === "number" ? d.minutes : null,
     cover: typeof d.cover === "string" && d.cover.startsWith("https://") ? d.cover : null,
     colours: Array.isArray(d.colours) ? d.colours.filter((c) => /^#[0-9a-f]{6}$/i.test(c)) : [],
-    audio_url: d.audio_url,
-    audio_expires_in: typeof d.audio_expires_in === "number" ? d.audio_expires_in : 0,
+    stream_url: stream,
     stores: {
       app_store: typeof d.stores?.app_store === "string" ? d.stores.app_store : null,
       google_play:
@@ -55,7 +58,7 @@ export function parseShare(body: unknown): Share | null {
 
 /**
  * One share per request (the page and its preview tags share the call, so
- * a visit counts once). Never cached: the audio link is signed per visit.
+ * a visit counts once). Never cached: the stream token is made per visit.
  */
 export const fetchShare = cache(async (code: string): Promise<Share | null> => {
   if (!CODE.test(code)) return null;
