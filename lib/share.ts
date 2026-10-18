@@ -11,6 +11,8 @@ export interface Share {
   /** The encrypted HLS playlist (a short-lived token in it); null when the
    *  session has no encrypted rendition yet: the page then points to the app. */
   stream_url: string | null;
+  /** How much the web plays; the whole session is in the app. */
+  preview_minutes: number | null;
   stores: { app_store: string | null; google_play: string };
 }
 
@@ -46,6 +48,7 @@ export function parseShare(body: unknown): Share | null {
     cover: typeof d.cover === "string" && d.cover.startsWith("https://") ? d.cover : null,
     colours: Array.isArray(d.colours) ? d.colours.filter((c) => /^#[0-9a-f]{6}$/i.test(c)) : [],
     stream_url: stream,
+    preview_minutes: typeof d.preview_minutes === "number" ? d.preview_minutes : null,
     stores: {
       app_store: typeof d.stores?.app_store === "string" ? d.stores.app_store : null,
       google_play:

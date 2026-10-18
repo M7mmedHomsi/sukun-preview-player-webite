@@ -20,6 +20,8 @@ export const STRINGS = {
     pause: "Pause",
     seek: "Position in the session",
     appOnly: "This session plays in the Sukun app.",
+    preview: (p: number, total: number) => `${p}-minute preview · ${total} min in Sukun`,
+    previewEnd: "That's the preview. Listen to the whole session in Sukun.",
   },
   ar: {
     shared: "شاركه معك أحدهم من سُكون",
@@ -39,6 +41,8 @@ export const STRINGS = {
     pause: "إيقاف مؤقت",
     seek: "الموضع في الجلسة",
     appOnly: "تُشغَّل هذه الجلسة في تطبيق سُكون.",
+    preview: (p: number, total: number) => `معاينة ${p} دقائق · ${total} دقيقة في سُكون`,
+    previewEnd: "انتهت المعاينة. استمع إلى الجلسة كاملة في سُكون.",
   },
 } as const;
 

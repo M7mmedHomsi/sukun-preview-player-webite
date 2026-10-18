@@ -213,6 +213,8 @@ h1 { margin: 22px 0 0; font-size: 28px; line-height: 1.2; font-weight: 600; lett
 
 audio { display: none; }
 
+.end-note { margin: 16px 0 0; font-weight: 600; color: var(--soft); }
+
 .app-only { margin: 26px 0 0; padding: 12px 18px; border-radius: 999px; background: var(--glass); border: 1px solid var(--edge); color: var(--soft); }
 
 /* ------------------------------------------------------------ get sukun */

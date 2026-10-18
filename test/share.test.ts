@@ -13,6 +13,7 @@ const good = {
     colours: ["#3067D4", "not-a-colour"],
     stream_url: "https://abc.supabase.co/functions/v1/share/UHY8Ggs6fj/play.m3u8?t=1800000000.abc",
     stream_expires_in: 1800,
+    preview_minutes: 5,
     stores: { app_store: null, google_play: "https://play.google.com/store/apps/details?id=ae.appzone.sukun" },
   },
 };
@@ -22,6 +23,7 @@ describe("parseShare", () => {
     const share = parseShare(good);
     expect(share?.title.ar).toBe("التنفس البطني");
     expect(share?.minutes).toBe(10);
+    expect(share?.preview_minutes).toBe(5);
     expect(share?.colours).toEqual(["#3067D4"]);
   });
 

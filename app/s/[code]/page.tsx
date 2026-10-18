@@ -78,10 +78,20 @@ export default async function SharePage({ params }: Props) {
           <div className="art art-silk" aria-hidden="true" />
         )}
         <h1>{title}</h1>
-        {share.minutes ? <p className="minutes">{t.minutes(share.minutes)}</p> : null}
+        {share.minutes ? (
+          <p className="minutes">
+            {share.stream_url && share.preview_minutes && share.preview_minutes < share.minutes
+              ? t.preview(share.preview_minutes, share.minutes)
+              : t.minutes(share.minutes)}
+          </p>
+        ) : null}
         {about ? <p className="about">{about}</p> : null}
         {share.stream_url ? (
-          <Player stream={share.stream_url} labels={{ play: t.play, pause: t.pause, seek: t.seek }} />
+          <Player
+            stream={share.stream_url}
+            labels={{ play: t.play, pause: t.pause, seek: t.seek }}
+            endNote={share.preview_minutes && share.minutes && share.preview_minutes < share.minutes ? t.previewEnd : null}
+          />
         ) : (
           <p className="app-only">{t.appOnly}</p>
         )}

@@ -22,11 +22,21 @@ function clock(seconds: number): string {
  * "Download") are never shown. hls.js plays it where the browser can't
  * play HLS itself (Chrome, Firefox); iPhone and Safari play it natively.
  */
-export function Player({ stream, labels }: { stream: string; labels: Labels }) {
+export function Player({
+  stream,
+  labels,
+  endNote = null,
+}: {
+  stream: string;
+  labels: Labels;
+  /** Shown when the preview has played to its end. */
+  endNote?: string | null;
+}) {
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [ended, setEnded] = useState(false);
 
   useEffect(() => {
     const a = audio.current;
@@ -56,21 +66,28 @@ export function Player({ stream, labels }: { stream: string; labels: Labels }) {
     if (!a) return;
     const onTime = () => setTime(a.currentTime);
     const onMeta = () => setDuration(Number.isFinite(a.duration) ? a.duration : 0);
-    const onPlay = () => setPlaying(true);
+    const onPlay = () => {
+      setPlaying(true);
+      setEnded(false);
+    };
     const onPause = () => setPlaying(false);
+    const onEnded = () => {
+      setPlaying(false);
+      setEnded(true);
+    };
     a.addEventListener("timeupdate", onTime);
     a.addEventListener("loadedmetadata", onMeta);
     a.addEventListener("durationchange", onMeta);
     a.addEventListener("play", onPlay);
     a.addEventListener("pause", onPause);
-    a.addEventListener("ended", onPause);
+    a.addEventListener("ended", onEnded);
     return () => {
       a.removeEventListener("timeupdate", onTime);
       a.removeEventListener("loadedmetadata", onMeta);
       a.removeEventListener("durationchange", onMeta);
       a.removeEventListener("play", onPlay);
       a.removeEventListener("pause", onPause);
-      a.removeEventListener("ended", onPause);
+      a.removeEventListener("ended", onEnded);
     };
   }, []);
 
@@ -119,6 +136,7 @@ export function Player({ stream, labels }: { stream: string; labels: Labels }) {
           </svg>
         )}
       </button>
+      {ended && endNote ? <p className="end-note">{endNote}</p> : null}
       {/* No `controls`: nothing of the browser's own player is ever shown. */}
       <audio
         ref={audio}
