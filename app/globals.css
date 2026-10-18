@@ -1,0 +1,90 @@
+:root {
+  color-scheme: light dark;
+  --ink: #1e163f;
+  --muted: rgba(30, 22, 63, 0.6);
+  --card: rgba(255, 255, 255, 0.72);
+  --card-edge: rgba(255, 255, 255, 0.8);
+  --page: linear-gradient(160deg, #6d9bea 0%, #a27dcb 45%, #2b3f96 100%);
+  --store: #1e163f;
+  --store-ink: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #fff;
+    --muted: rgba(255, 255, 255, 0.6);
+    --card: rgba(255, 255, 255, 0.08);
+    --card-edge: rgba(255, 255, 255, 0.3);
+    --page: linear-gradient(160deg, #1b2a6b 0%, #3b2b6e 50%, #0e1433 100%);
+    --store: #fff;
+    --store-ink: #1e163f;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  color: var(--ink);
+  background: var(--page);
+  background-attachment: fixed;
+  font: 16px/1.5 var(--font-latin), var(--font-arabic), -apple-system, "Segoe UI", system-ui, sans-serif;
+}
+
+html[lang="ar"] body {
+  font-family: var(--font-arabic), var(--font-latin), -apple-system, "Segoe UI", system-ui, sans-serif;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  border-radius: 28px;
+  text-align: center;
+  background: var(--card);
+  border: 1px solid var(--card-edge);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 24px 60px rgba(30, 22, 63, 0.25);
+}
+
+.art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  object-fit: cover;
+}
+
+.logo { width: 88px; height: 88px; border-radius: 22px; }
+
+.from { margin: 20px 0 4px; font-size: 14px; color: var(--muted); }
+
+h1 { margin: 0; font-size: 26px; line-height: 1.25; font-weight: 600; }
+
+.minutes { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+
+.about { margin: 12px 0 0; color: var(--muted); }
+
+audio { width: 100%; margin-top: 20px; }
+
+.get { margin: 24px 0 8px; font-weight: 600; }
+
+.stores { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+.store {
+  flex: 1 1 140px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--store-ink);
+  background: var(--store);
+}
+
+.store:focus-visible { outline: 3px solid #9968ee; outline-offset: 2px; }
