@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { pickLang } from "@/lib/strings";
-import { inter, plexArabic } from "./fonts";
+import { inter, interTight, plexArabic } from "./fonts";
 import "./globals.css";
 
 // Link previews need full addresses (the default preview image): the
@@ -23,16 +23,14 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#6D9BEA" },
-    { media: "(prefers-color-scheme: dark)", color: "#1B2A6B" },
-  ],
+  viewportFit: "cover",
+  themeColor: "#1E2A5C",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = pickLang((await headers()).get("accept-language"));
   return (
-    <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} className={`${inter.variable} ${plexArabic.variable}`}>
+    <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} className={`${inter.variable} ${interTight.variable} ${plexArabic.variable}`}>
       <body>{children}</body>
     </html>
   );

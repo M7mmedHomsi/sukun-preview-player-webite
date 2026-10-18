@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseShare } from "../lib/share";
-import { pickLang } from "../lib/strings";
+import { formatHertz, pickLang, pickPlatform } from "../lib/strings";
 
 const good = {
   success: true,
@@ -14,6 +14,9 @@ const good = {
     stream_url: "https://abc.supabase.co/functions/v1/share/UHY8Ggs6fj/play.m3u8?t=1800000000.abc",
     stream_expires_in: 1800,
     preview_minutes: 5,
+    look: { kind: "silk", pattern: "orbs", seed: 12.345, colours: ["#112233", "#445566", "#778899", "#AABBCC"], photo: null },
+    voiced: true,
+    hertz: null,
     stores: { app_store: null, google_play: "https://play.google.com/store/apps/details?id=ae.appzone.sukun" },
   },
 };
@@ -40,8 +43,37 @@ describe("parseShare", () => {
     expect(parseShare({ ...good, data: { ...good.data, stream_url: null } })?.stream_url).toBeNull();
   });
 
+  it("keeps the app player's look, else Sukun's default silk", () => {
+    expect(parseShare(good)?.look).toEqual(good.data.look);
+    const odd = parseShare({ ...good, data: { ...good.data, look: { kind: "photo", pattern: "new", seed: "x", colours: ["red"], photo: "http://x" } } });
+    expect(odd?.look.kind).toBe("silk");
+    expect(odd?.look.pattern).toBe("silk");
+    expect(odd?.look.seed).toBe(0);
+    expect(odd?.look.colours).toHaveLength(4);
+    const photo = parseShare({ ...good, data: { ...good.data, look: { ...good.data.look, kind: "photo", photo: "https://x/c.jpg" } } });
+    expect(photo?.look.photo).toBe("https://x/c.jpg");
+    expect(parseShare({ ...good, data: { ...good.data, look: undefined } })?.look.pattern).toBe("silk");
+  });
+
+  it("knows a Sleep Frequency's Hz and that it has no narrator", () => {
+    const f = parseShare({ ...good, data: { ...good.data, voiced: false, hertz: 432 } });
+    expect(f?.voiced).toBe(false);
+    expect(f?.hertz).toBe(432);
+    expect(parseShare(good)?.voiced).toBe(true);
+    expect(formatHertz(432)).toBe("432");
+    expect(formatHertz(7.83)).toBe("7.83");
+  });
+
   it("drops a cover that is not https", () => {
     expect(parseShare({ ...good, data: { ...good.data, cover: "http://x/a.png" } })?.cover).toBeNull();
+  });
+});
+
+describe("pickPlatform", () => {
+  it("offers the visitor's own store, both on a computer", () => {
+    expect(pickPlatform("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)")).toBe("ios");
+    expect(pickPlatform("Mozilla/5.0 (Linux; Android 15; Pixel 9)")).toBe("android");
+    expect(pickPlatform("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")).toBe("desktop");
   });
 });
 

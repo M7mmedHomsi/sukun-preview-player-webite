@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { fetchShare } from "@/lib/share";
-import { pickLang, STRINGS } from "@/lib/strings";
+import { pickLang, pickPlatform, STRINGS } from "@/lib/strings";
+import { Notice } from "../../notice";
 import { Player } from "../../player";
-import { Brand, GetSukun } from "../../stores";
+import { stores } from "../../stores";
 
 // Every visit asks the server: the audio link is signed per visit.
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ code: string }> };
 
-const NIGHT = ["#143880", "#33337D", "#512E7A", "#0A1F5C"];
-
-async function lang() {
-  return pickLang((await headers()).get("accept-language"));
+async function visitor() {
+  const h = await headers();
+  return { lang: pickLang(h.get("accept-language")), platform: pickPlatform(h.get("user-agent")) };
 }
 
 /** The link preview WhatsApp, iMessage and others draw: the session's
@@ -21,10 +21,10 @@ async function lang() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { code } = await params;
   const share = await fetchShare(code);
-  const l = await lang();
+  const { lang } = await visitor();
   if (!share) return { title: "Sukun" };
-  const title = `${share.title[l] || share.title.en} · Sukun`;
-  const description = share.about[l] || share.about.en || STRINGS[l].shared;
+  const title = `${share.title[lang] || share.title.en} · Sukun`;
+  const description = share.about[lang] || share.about.en || STRINGS[lang].shared;
   const image = share.cover ?? "/og.png";
   return {
     title,
@@ -34,69 +34,40 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-/** The session's own silk colours behind the page, as in the app's player. */
-function stage(colours: string[], cover: string | null): React.CSSProperties {
-  const [a, b, c, d] = [...colours, ...NIGHT].slice(0, 4);
-  return {
-    ["--c1" as string]: a,
-    ["--c2" as string]: b,
-    ["--c3" as string]: c,
-    ["--c4" as string]: d,
-    ["--cover" as string]: cover ? `url("${cover}")` : "none",
-  };
-}
-
 export default async function SharePage({ params }: Props) {
   const { code } = await params;
-  const l = await lang();
-  const t = STRINGS[l];
+  const { lang, platform } = await visitor();
+  const t = STRINGS[lang];
   const share = await fetchShare(code);
 
   if (!share) {
     return (
-      <div className="stage" style={stage([], null)}>
-        <Brand />
-        <main className="gone">
-          <h1>{t.gone}</h1>
-          <p className="about">{t.gone2}</p>
-        </main>
-        <GetSukun t={t} appStore={process.env.APP_STORE_URL} />
-      </div>
+      <Notice
+        lang={lang}
+        platform={platform}
+        stores={await stores(process.env.APP_STORE_URL)}
+        title={t.gone}
+        body={t.gone2}
+      />
     );
   }
 
-  const title = share.title[l] || share.title.en;
-  const about = share.about[l] || share.about.en;
   return (
-    <div className="stage" style={stage(share.colours, share.cover)}>
-      <Brand />
-      <main className="session">
-        <p className="shared">{t.shared}</p>
-        {share.cover ? (
-          <img className="art" src={share.cover} alt="" />
-        ) : (
-          <div className="art art-silk" aria-hidden="true" />
-        )}
-        <h1>{title}</h1>
-        {share.minutes ? (
-          <p className="minutes">
-            {share.stream_url && share.preview_minutes && share.preview_minutes < share.minutes
-              ? t.preview(share.preview_minutes, share.minutes)
-              : t.minutes(share.minutes)}
-          </p>
-        ) : null}
-        {about ? <p className="about">{about}</p> : null}
-        {share.stream_url ? (
-          <Player
-            stream={share.stream_url}
-            labels={{ play: t.play, pause: t.pause, seek: t.seek }}
-            endNote={share.preview_minutes && share.minutes && share.preview_minutes < share.minutes ? t.previewEnd : null}
-          />
-        ) : (
-          <p className="app-only">{t.appOnly}</p>
-        )}
-      </main>
-      <GetSukun t={t} appStore={share.stores.app_store} googlePlay={share.stores.google_play} />
-    </div>
+    <Player
+      lang={lang}
+      platform={platform}
+      stores={await stores(share.stores.app_store, share.stores.google_play)}
+      session={{
+        title: share.title[lang] || share.title.en,
+        about: share.about[lang] || share.about.en,
+        minutes: share.minutes,
+        previewMinutes: share.preview_minutes,
+        look: share.look,
+        voiced: share.voiced,
+        hertz: share.hertz,
+        cover: share.cover,
+        stream: share.stream_url,
+      }}
+    />
   );
 }

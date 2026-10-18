@@ -1,4 +1,43 @@
 import { cache } from "react";
+import { isPattern, type Pattern } from "./shaders/patterns";
+
+/** How the app's player draws the session behind its controls. */
+export interface Look {
+  kind: "silk" | "photo";
+  pattern: Pattern;
+  seed: number;
+  /** Four #rrggbb stops, low → high. */
+  colours: string[];
+  photo: string | null;
+}
+
+/** Sukun's blue → lavender silk, the app's default. */
+export const DEFAULT_LOOK: Look = {
+  kind: "silk",
+  pattern: "silk",
+  seed: 0,
+  colours: ["#3067D4", "#6972CF", "#A27DCB", "#EBDFFF"],
+  photo: null,
+};
+
+const HEX = /^#[0-9a-f]{6}$/i;
+
+function parseLook(raw: unknown): Look {
+  if (!raw || typeof raw !== "object") return DEFAULT_LOOK;
+  const l = raw as Partial<Look>;
+  const colours =
+    Array.isArray(l.colours) && l.colours.length === 4 && l.colours.every((c) => typeof c === "string" && HEX.test(c))
+      ? l.colours
+      : DEFAULT_LOOK.colours;
+  const photo = typeof l.photo === "string" && l.photo.startsWith("https://") ? l.photo : null;
+  return {
+    kind: l.kind === "photo" && photo ? "photo" : "silk",
+    pattern: isPattern(l.pattern) ? l.pattern : "silk",
+    seed: typeof l.seed === "number" && Number.isFinite(l.seed) ? l.seed : 0,
+    colours,
+    photo,
+  };
+}
 
 /** What the Sukun `share` function returns for a code (GET /share/<code>/data). */
 export interface Share {
@@ -13,6 +52,11 @@ export interface Share {
   stream_url: string | null;
   /** How much the web plays; the whole session is in the app. */
   preview_minutes: number | null;
+  look: Look;
+  /** A narrated session (the app's "Voiceover" title); false for
+   *  Sleep Frequencies and White Sounds. */
+  voiced: boolean;
+  hertz: number | null;
   stores: { app_store: string | null; google_play: string };
 }
 
@@ -49,6 +93,9 @@ export function parseShare(body: unknown): Share | null {
     colours: Array.isArray(d.colours) ? d.colours.filter((c) => /^#[0-9a-f]{6}$/i.test(c)) : [],
     stream_url: stream,
     preview_minutes: typeof d.preview_minutes === "number" ? d.preview_minutes : null,
+    look: parseLook(d.look),
+    voiced: d.voiced !== false,
+    hertz: typeof d.hertz === "number" && d.hertz > 0 ? d.hertz : null,
     stores: {
       app_store: typeof d.stores?.app_store === "string" ? d.stores.app_store : null,
       google_play:

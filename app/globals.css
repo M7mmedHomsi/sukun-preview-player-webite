@@ -1,298 +1,441 @@
-/* Sukun's player, on the web: the session's silk colours full-bleed, white
-   type, the app's white play button and glass. One look in light and dark
-   (the app's player is always on its gradient). */
+/* The app's player screen on the web (PlayerScreen, Figma 458:9015): the
+   session's backdrop full-bleed, white type, the ring, the glass skips, the
+   white play button, and the app's light sheet for asking them to get the
+   app. Sizes are the app's points at its 393pt frame; the ring and the gaps
+   around it scale with the width like the app's (`* s`). The player is
+   always on its own backdrop, so one look serves light and dark. */
 :root {
   color-scheme: dark;
-  --ink: #fff;
-  --soft: rgba(255, 255, 255, 0.78);
-  --muted: rgba(255, 255, 255, 0.6);
-  --glass: rgba(255, 255, 255, 0.1);
-  --edge: rgba(255, 255, 255, 0.28);
-  --accent: #9968ee;
-  --navy: #1e163f;
+  --purple: #9968ee;
+  --sheet: radial-gradient(130% 100% at 0% 0%, #c8e5ff 0%, #e5d7ff 50.33%, #f5fbff 100%);
+  --on-card-2: rgba(0, 0, 0, 0.44);
+  /* SukunDesign's type: Inter (body) and Inter Tight (20pt and up). */
+  --body: var(--font-latin), var(--font-arabic), -apple-system, "Segoe UI", system-ui, sans-serif;
+  --display: var(--font-display), var(--font-arabic), -apple-system, "Segoe UI", system-ui, sans-serif;
+  --lh-display: 36px;
+  --lh-heading-m: 28px;
+  --lh-heading-s: 24px;
+  --lh-body-l: 20px;
+  --ls-heading-s: -0.4px;
+  --ls-body-l: -0.32px;
+  --ls-body-m: -0.28px;
+  /* The app's `s`: the frame scale, capped at the column's width. */
+  --ring: min(79.64vw, 342px);
+  --gap-24: min(6.11vw, 26px);
+  --gap-32: min(8.14vw, 35px);
+}
+
+/* Arabic: IBM Plex Sans Arabic, the looser line heights and neutral
+   tracking the connected script needs (SukunDesign's `_…Ar` styles). */
+html[lang="ar"] {
+  --body: var(--font-arabic), var(--font-latin), -apple-system, "Segoe UI", system-ui, sans-serif;
+  --display: var(--font-arabic), var(--font-display), -apple-system, "Segoe UI", system-ui, sans-serif;
+  --lh-display: 40px;
+  --lh-heading-m: 32px;
+  --lh-heading-s: 28px;
+  --lh-body-l: 24px;
+  --ls-heading-s: 0;
+  --ls-body-l: 0;
+  --ls-body-m: 0;
 }
 
 * { box-sizing: border-box; }
 
-html, body { margin: 0; min-height: 100%; background: #0e1433; }
+html, body { margin: 0; min-height: 100%; background: #1e2a5c; }
 
 body {
-  color: var(--ink);
-  font: 16px/1.5 var(--font-latin), var(--font-arabic), -apple-system, "Segoe UI", system-ui, sans-serif;
+  color: #fff;
+  font: 500 16px/1.4 var(--body);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
-html[lang="ar"] body {
-  font-family: var(--font-arabic), var(--font-latin), -apple-system, "Segoe UI", system-ui, sans-serif;
-}
+button { font: inherit; color: inherit; }
 
-/* ---------------------------------------------------------------- stage */
-.stage {
-  --c1: #143880; --c2: #33337d; --c3: #512e7a; --c4: #0a1f5c;
-  --cover: none;
-  position: relative;
-  isolation: isolate;
-  min-height: 100vh;
-  padding: 20px 16px 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 28px;
-  overflow: hidden;
-  background:
-    radial-gradient(120% 70% at 0% 0%, var(--c1) 0%, transparent 62%),
-    radial-gradient(90% 60% at 100% 25%, var(--c2) 0%, transparent 60%),
-    radial-gradient(120% 80% at 30% 100%, var(--c3) 0%, transparent 65%),
-    linear-gradient(165deg, var(--c1) 0%, var(--c3) 55%, var(--c4) 100%);
-}
+/* -------------------------------------------------------------- backdrop */
+.screen { position: relative; isolation: isolate; min-height: 100svh; }
 
-/* The cover, blurred and soft behind everything (as Calm and the app's
-   player do), then a veil so white type always reads. */
-.stage::before {
-  content: "";
+.backdrop { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: #1e2a5c; }
+
+.silk, .silk-canvas, .photo, .scrim { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.silk-canvas { display: block; opacity: 0; transition: opacity 0.4s ease-out; }
+.silk-canvas[data-ready] { opacity: 1; }
+
+/* A cover or CMS background: softly blurred (the app's sigma 5), drifting
+   and breathing slowly, with faint motes rising through it. */
+.photo { overflow: hidden; }
+.photo img {
   position: absolute;
-  inset: -80px;
-  z-index: -2;
-  background: var(--cover) center / cover no-repeat;
-  filter: blur(70px) saturate(1.2);
-  opacity: 0.55;
+  inset: -24px;
+  width: calc(100% + 48px);
+  height: calc(100% + 48px);
+  object-fit: cover;
+  filter: blur(5px);
+  animation: drift 36s ease-in-out infinite alternate;
 }
-
-.stage::after {
-  content: "";
+@keyframes drift {
+  from { transform: scale(1.06) translate3d(-1.5%, -1%, 0); }
+  to { transform: scale(1.12) translate3d(1.5%, 1%, 0); }
+}
+.motes {
   position: absolute;
   inset: 0;
-  z-index: -1;
-  background: linear-gradient(180deg, rgba(14, 20, 51, 0.15) 0%, rgba(14, 20, 51, 0.55) 70%, rgba(14, 20, 51, 0.75) 100%);
+  opacity: 0.55;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.8) 0 1.4px, transparent 2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.6) 0 1px, transparent 1.6px);
+  background-size: 190px 270px, 250px 330px;
+  background-position: 20px 40px, 120px 160px;
+  animation: rise 40s linear infinite;
+}
+@keyframes rise {
+  to { background-position: 20px -230px, 120px -170px; }
 }
 
-/* ---------------------------------------------------------------- brand */
-.brand {
-  width: 100%;
-  max-width: 980px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 18px;
+/* Darker under the status bar and nav, lightest across the ring, deepest
+   behind the transport and actions (the app's `_scrim`). */
+.scrim {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.08) 22%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
 }
 
-.brand img { border-radius: 9px; }
+@media (prefers-reduced-motion: reduce) {
+  .photo img, .motes { animation: none; }
+}
 
-.brand-ar { margin-inline-start: auto; font-family: var(--font-arabic), sans-serif; opacity: 0.85; }
-
-/* -------------------------------------------------------------- session */
-.session, .gone {
-  width: 100%;
-  max-width: 420px;
+/* --------------------------------------------------------------- column */
+.column {
+  position: relative;
+  margin: 0 auto;
+  max-width: 430px;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: calc(env(safe-area-inset-top) + 12px) 0 calc(env(safe-area-inset-bottom) + 40px);
+}
+
+.grow { flex: 1 1 0; min-height: 20px; }
+
+/* "nav bar" (458:9053): 40pt white circles, the title centred between. */
+.nav { display: flex; align-items: center; width: 100%; padding: 0 24px; }
+.circle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+.circle:focus-visible, .glass:focus-visible, .play:focus-visible, .action:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+/* Where the app has its back button: the Sukun icon, uncropped. */
+.brand-circle { overflow: hidden; border-radius: 12px; cursor: default; }
+.brand-circle img { display: block; width: 40px; height: 40px; }
+.nav-title {
+  flex: 1;
   text-align: center;
+  font: 500 20px/var(--lh-heading-s) var(--display);
+  letter-spacing: var(--ls-heading-s);
 }
 
-.shared {
-  margin: 0 0 18px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  color: var(--soft);
-  background: var(--glass);
-  border: 1px solid var(--edge);
-  backdrop-filter: blur(16px);
+/* ----------------------------------------------------------------- ring */
+.ring { position: relative; width: var(--ring); aspect-ratio: 1; touch-action: none; outline: none; }
+.ring:focus-visible .ring-svg { filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)); }
+.ring-glass {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
 }
-
-.art {
-  width: min(78vw, 300px);
-  aspect-ratio: 1;
-  border-radius: 28px;
-  object-fit: cover;
-  box-shadow: 0 30px 60px rgba(8, 10, 40, 0.45);
+.ring-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ring-time {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 91.05%;
+  text-align: center;
+  font: 500 16px/20px var(--font-latin), sans-serif;
+  letter-spacing: -0.32px;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
 }
-
-.art-silk {
-  background:
-    radial-gradient(80% 80% at 20% 20%, var(--c2), transparent 70%),
-    linear-gradient(135deg, var(--c1), var(--c3));
+.ring-hollow {
+  position: absolute;
+  left: 12.78%;
+  right: 12.78%;
+  top: 14.06%;
+  bottom: 19.17%;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  pointer-events: none;
 }
-
-h1 { margin: 22px 0 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
-
-.minutes { margin: 6px 0 0; font-size: 15px; color: var(--muted); }
-
-.about {
-  margin: 12px 0 0;
-  max-width: 360px;
-  font-size: 15px;
-  color: var(--soft);
+.ring-title {
+  margin: 0;
+  font: 600 32px/var(--lh-display) var(--display);
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.hz, .about-line {
+  margin: var(--gap-24) 32px 0;
+  text-align: center;
+  font: 500 14px/20px var(--body);
+  letter-spacing: var(--ls-body-m);
+}
+.about-line {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.about-line.after-hz { margin-top: 16px; }
 
-.logo { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 20px 40px rgba(8, 10, 40, 0.4); }
+/* ------------------------------------------------------------ transport */
+/* "nav" (560:17193): 50pt glass skips 40pt either side of the 80pt white
+   play circle; never mirrored, like the system players. */
+.transport { display: flex; align-items: center; gap: 40px; margin-top: var(--gap-32); }
+.glass {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  cursor: pointer;
+}
+.play {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.play:active, .glass:active, .circle:active { transform: scale(0.95); }
+/* Pressed play and the sound is not there yet: the button breathes. */
+.play.waiting::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  animation: halo 1.6s ease-in-out infinite;
+}
+@keyframes halo {
+  0%, 100% { transform: scale(0.96); opacity: 0.9; }
+  50% { transform: scale(1.1); opacity: 0.25; }
+}
 
-.gone { margin-top: 8vh; }
+/* -------------------------------------------------------------- actions */
+.preview-pill {
+  margin: 0 20px 20px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  text-align: center;
+  font: 500 13px/18px var(--body);
+}
 
-/* --------------------------------------------------------------- player */
-.player {
-  width: 100%;
-  max-width: 360px;
-  margin-top: 26px;
+/* "items" (560:17200): equal columns, a 24pt glyph over a 14pt label. */
+.actions { display: flex; width: 100%; gap: 4px; padding: 0 20px; }
+.action {
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.seek {
-  --done: 0%;
-  width: 100%;
-  height: 22px;
-  margin: 0;
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
+  gap: 4px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 16px;
+  background: none;
+  white-space: nowrap;
+  font: 500 14px/20px var(--body);
+  letter-spacing: var(--ls-body-m);
   cursor: pointer;
 }
-
-.seek::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #fff var(--done), rgba(255, 255, 255, 0.28) var(--done));
-}
-
-.seek::-moz-range-track { height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.28); }
-.seek::-moz-range-progress { height: 4px; border-radius: 999px; background: #fff; }
-
-.seek::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  margin-top: -5px;
-  border-radius: 50%;
+.glyph {
+  width: 24px;
+  height: 24px;
   background: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
 }
 
-.seek::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff; }
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 120px);
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 100px;
+  background: rgba(0, 0, 0, 0.6);
+  font: 500 14px/20px var(--body);
+}
 
-.seek:disabled { opacity: 0.6; cursor: default; }
-
-.times {
+/* ---------------------------------------------------------------- sheet */
+/* SukunSheet: the light gradient card floated 4pt off the edges, 36pt top
+   and 52pt bottom corners, the white grabber. */
+.sheet-layer {
   width: 100%;
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2px;
-  font-size: 13px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #000;
 }
-
-.play {
-  margin-top: 14px;
-  width: 76px;
-  height: 76px;
+.sheet-layer[open] { display: flex; align-items: flex-end; justify-content: center; }
+.sheet-layer::backdrop { background: rgba(0, 0, 0, 0.4); }
+.sheet {
+  position: relative;
+  width: calc(100% - 8px);
+  max-width: 430px;
+  max-height: 88svh;
+  overflow: auto;
+  margin: 0 4px 4px;
+  padding: 8px 24px calc(env(safe-area-inset-bottom) + 24px);
+  border-radius: 36px 36px 52px 52px;
+  background: var(--sheet);
+  animation: rise-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  outline: none;
+}
+@keyframes rise-in {
+  from { transform: translateY(48px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@media (min-width: 700px) {
+  .sheet-layer[open] { align-items: center; }
+  .sheet { margin: 0; border-radius: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet { animation: none; }
+}
+.grabber { width: 56px; height: 5px; margin: 0 auto 16px; border-radius: 2.5px; background: #fff; }
+.sheet-close {
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 16px;
+  width: 36px;
+  height: 36px;
   border: 0;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-  background: #fff;
-  box-shadow: 0 14px 30px rgba(8, 10, 40, 0.35);
+  background: rgba(255, 255, 255, 0.6);
+  color: #000;
+  font: 400 24px/1 var(--font-latin), sans-serif;
   cursor: pointer;
-  transition: transform 0.15s ease;
 }
-
-.play:active { transform: scale(0.95); }
-.play:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
-
-audio { display: none; }
-
-.end-note { margin: 16px 0 0; font-weight: 600; color: var(--soft); }
-
-.app-only { margin: 26px 0 0; padding: 12px 18px; border-radius: 999px; background: var(--glass); border: 1px solid var(--edge); color: var(--soft); }
-
-/* ------------------------------------------------------------ get sukun */
-.get {
-  width: 100%;
-  max-width: 420px;
-  padding: 22px 18px 20px;
-  border-radius: 28px;
+.sheet-close:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.sheet-icon {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 8px auto 16px;
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(48, 40, 120, 0.22);
+}
+.sheet-title {
+  margin: 0;
+  padding: 0 28px;
   text-align: center;
-  background: var(--glass);
-  border: 1px solid var(--edge);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  font: 500 24px/var(--lh-heading-m) var(--display);
 }
+.sheet-body {
+  margin: 8px 0 0;
+  text-align: center;
+  color: var(--on-card-2);
+  font: 500 14px/20px var(--body);
+  letter-spacing: var(--ls-body-m);
+  white-space: pre-line;
+}
+.sheet-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
 
-.get h2 { margin: 0; font-size: 19px; font-weight: 600; }
-
-.get-body { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
-
-.stores { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-.store { display: flex; flex-direction: column; align-items: center; }
-
-.qr {
+/* SukunSheetButton: 60pt pills, Heading/S labels. */
+.pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  max-width: 150px;
-  aspect-ratio: 1;
-  padding: 12px;
-  border-radius: 20px;
-  background: #fff;
+  height: 60px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 100px;
+  text-align: center;
+  text-decoration: none;
+  font: 500 20px/var(--lh-heading-s) var(--display);
+  letter-spacing: var(--ls-heading-s);
+  cursor: pointer;
 }
+.pill-primary { background: var(--purple); color: #fff; }
+.pill-secondary { background: #fff; color: #000; }
+.pill-off { opacity: 0.55; cursor: default; }
+.pill:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; }
 
+/* On a computer: a QR code per store, on the app's white-60 glass tiles. */
+.qrs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.qr-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid #fff;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.6);
+}
+.qr { width: 100%; max-width: 150px; aspect-ratio: 1; }
 .qr svg { display: block; width: 100%; height: 100%; }
-
-.qr-empty {
+.qr-soon {
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px dashed var(--edge);
-  color: var(--muted);
-  font-size: 14px;
+  border: 1.5px dashed rgba(0, 0, 0, 0.25);
+  border-radius: 16px;
+  color: var(--on-card-2);
+  font: 500 14px/20px var(--body);
 }
+.qr-tile figcaption { display: flex; flex-direction: column; align-items: center; font: 500 14px/20px var(--body); }
+.qr-tile figcaption b { font-weight: 600; font-size: 16px; }
+.qr-tile figcaption span { color: var(--on-card-2); }
+.qrs-hint { grid-column: 1 / -1; margin: 0; text-align: center; color: var(--on-card-2); font: 500 14px/20px var(--body); }
 
-.store-name { margin: 10px 0 0; font-weight: 600; font-size: 15px; }
-
-.store-device { margin: 0; font-size: 13px; color: var(--muted); }
-
-.store-open {
-  margin-top: 10px;
-  width: 100%;
-  max-width: 150px;
-  padding: 10px 12px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--navy);
-  background: #fff;
-}
-
-.store-open:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-
-/* ------------------------------------------------------- wide screens */
-@media (min-width: 880px) {
-  .stage {
-    display: grid;
-    grid-template-columns: minmax(0, 460px) minmax(0, 400px);
-    grid-template-rows: auto 1fr;
-    justify-content: center;
-    align-items: center;
-    column-gap: 72px;
-    row-gap: 24px;
-    padding: 28px 40px 56px;
-  }
-  .brand { grid-column: 1 / -1; justify-self: center; }
-  .session, .gone { margin-top: 0; }
-  .art { width: 320px; }
-  .get { padding: 30px 26px 26px; }
-  /* A computer can't tap the store: the QR codes are the way. */
-  .store-open { background: transparent; color: #fff; border: 1px solid var(--edge); }
-}
+/* --------------------------------------------------------------- notice */
+.notice { padding-left: 24px; padding-right: 24px; text-align: center; }
+.notice-icon { border-radius: 24px; box-shadow: 0 20px 40px rgba(8, 10, 40, 0.35); }
+.notice-title { margin: 20px 0 0; font: 600 28px/32px var(--display); }
+.notice-body { margin: 10px 0 0; color: rgba(255, 255, 255, 0.82); font: 500 16px/var(--lh-body-l) var(--body); }
+.card { width: 100%; padding: 24px; border-radius: 36px 36px 52px 52px; background: var(--sheet); color: #000; }

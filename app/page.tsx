@@ -1,19 +1,19 @@
 import { headers } from "next/headers";
-import { pickLang, STRINGS } from "@/lib/strings";
-import { Brand, GetSukun } from "./stores";
+import { pickLang, pickPlatform, STRINGS } from "@/lib/strings";
+import { Notice } from "./notice";
+import { stores } from "./stores";
 
 /** The bare address: what Sukun is, and where to get it. */
 export default async function Home() {
-  const t = STRINGS[pickLang((await headers()).get("accept-language"))];
+  const h = await headers();
+  const lang = pickLang(h.get("accept-language"));
   return (
-    <div className="stage">
-      <Brand />
-      <main className="gone">
-        <img className="logo" src="/icon.png" alt="" />
-        <h1>Sukun · سُكون</h1>
-        <p className="about">{t.home}</p>
-      </main>
-      <GetSukun t={t} appStore={process.env.APP_STORE_URL} />
-    </div>
+    <Notice
+      lang={lang}
+      platform={pickPlatform(h.get("user-agent"))}
+      stores={await stores(process.env.APP_STORE_URL)}
+      title="Sukun · سُكون"
+      body={STRINGS[lang].home}
+    />
   );
 }

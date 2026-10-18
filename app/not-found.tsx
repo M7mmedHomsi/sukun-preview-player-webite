@@ -1,15 +1,18 @@
-import { STRINGS } from "@/lib/strings";
-import { Brand, GetSukun } from "./stores";
+import { headers } from "next/headers";
+import { pickLang, pickPlatform } from "@/lib/strings";
+import { Notice } from "./notice";
+import { stores } from "./stores";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const h = await headers();
+  const lang = pickLang(h.get("accept-language"));
   return (
-    <div className="stage">
-      <Brand />
-      <main className="gone">
-        <h1>This page doesn&apos;t exist.</h1>
-        <p className="about">هذه الصفحة غير موجودة.</p>
-      </main>
-      <GetSukun t={STRINGS.en} appStore={process.env.APP_STORE_URL} />
-    </div>
+    <Notice
+      lang={lang}
+      platform={pickPlatform(h.get("user-agent"))}
+      stores={await stores(process.env.APP_STORE_URL)}
+      title={lang === "ar" ? "هذه الصفحة غير موجودة." : "This page doesn't exist."}
+      body={lang === "ar" ? "This page doesn't exist." : "هذه الصفحة غير موجودة."}
+    />
   );
 }
