@@ -1,5 +1,5 @@
 {
-  "name": "sukun-share",
+  "name": "sukun-preview-player",
   "version": "1.0.0",
   "private": true,
   "description": "The public page a shared Sukun session opens: the art, the words, a player for that one session, and the store buttons.",
