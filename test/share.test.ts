@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseShare } from "../lib/share";
-import { formatHertz, pickLang, pickPlatform } from "../lib/strings";
+import { formatHertz, isPreviewBot, pickLang, pickPlatform } from "../lib/strings";
 
 const good = {
   success: true,
@@ -74,6 +74,17 @@ describe("pickPlatform", () => {
     expect(pickPlatform("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)")).toBe("ios");
     expect(pickPlatform("Mozilla/5.0 (Linux; Android 15; Pixel 9)")).toBe("android");
     expect(pickPlatform("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")).toBe("desktop");
+  });
+});
+
+describe("isPreviewBot", () => {
+  it("knows the bots that draw link previews, not people", () => {
+    expect(isPreviewBot("WhatsApp/2.24.20.80 A")).toBe(true);
+    expect(isPreviewBot("facebookexternalhit/1.1 Facebot Twitterbot/1.0")).toBe(true);
+    expect(isPreviewBot("TelegramBot (like TwitterBot)")).toBe(true);
+    expect(isPreviewBot("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Safari/604.1")).toBe(false);
+    expect(isPreviewBot("Mozilla/5.0 (Linux; Android 15; Pixel 9) Chrome/131.0 Mobile Safari/537.36")).toBe(false);
+    expect(isPreviewBot(null)).toBe(false);
   });
 });
 

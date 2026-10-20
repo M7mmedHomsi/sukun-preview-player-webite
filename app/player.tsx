@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Look } from "@/lib/share";
 import { formatHertz, STRINGS, type Lang, type Platform } from "@/lib/strings";
-import { Backdrop } from "./backdrop";
+import { Backdrop, Silk } from "./backdrop";
 import { GetSukun, type Stores } from "./get-sukun";
 import { Ring } from "./ring";
 import { Sheet } from "./sheet";
@@ -177,6 +177,14 @@ export function Player({
   };
 
   const remaining = duration ? duration - time : (session.previewMinutes ?? 0) * 60;
+  // The square art: a frequency's or white sound's photo, else the cover,
+  // else the meditation's own silk, as the app's Library tiles show it.
+  const artUrl = session.look.photo ?? session.cover;
+  const art = artUrl ? (
+    <img src={artUrl} alt="" draggable={false} />
+  ) : (
+    <Silk look={session.look} />
+  );
   const hertz = session.hertz ? t.hertz(formatHertz(session.hertz)) : null;
 
   return (
@@ -201,9 +209,9 @@ export function Player({
           label={t.seek}
           onSeek={stream && duration ? (fraction) => seek(fraction * duration) : undefined}
           onStep={(by) => seek(time + by)}
-        >
-          <h1 className="ring-title">{session.title}</h1>
-        </Ring>
+          art={art}
+        />
+        <h1 className="session-title">{session.title}</h1>
         {hertz ? <p className="hz">{hertz}</p> : null}
         {session.about ? (
           <p className={`about-line${hertz ? " after-hz" : ""}`}>{session.about}</p>

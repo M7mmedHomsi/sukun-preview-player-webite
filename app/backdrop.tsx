@@ -29,7 +29,9 @@ function fallback(colours: string[]): string {
  *  more, and phones keep their battery. */
 const MAX_DPR = 1.5;
 
-function Silk({ look }: { look: Look }) {
+/** The session's animated gradient, filling its box (the backdrop, or the
+ *  square art of a meditation without a cover, as the app's SilkCover). */
+export function Silk({ look }: { look: Look }) {
   const canvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {

@@ -106,3 +106,12 @@ export function pickPlatform(userAgent: string | null | undefined): Platform {
 export function formatHertz(hz: number): string {
   return hz.toFixed(2).replace(/\.?0+$/, "");
 }
+
+/** The bots that open a link to draw its preview (WhatsApp, iMessage,
+ *  Telegram, ...): they get the session's card, never its stream, and
+ *  count no view. iMessage introduces itself as facebookexternalhit. */
+export function isPreviewBot(userAgent: string | null | undefined): boolean {
+  return /facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|slackbot|discordbot|linkedinbot|skypeuripreview|pinterest|redditbot|googlebot|bingbot|applebot|vkshare|embedly|iframely|snapchat|viber|kakaotalk|line\/|signal|bot|crawler|spider|preview/i.test(
+    userAgent ?? "",
+  );
+}

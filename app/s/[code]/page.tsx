@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { fetchShare } from "@/lib/share";
-import { pickLang, pickPlatform, STRINGS } from "@/lib/strings";
+import { fetchCard, fetchShare } from "@/lib/share";
+import { isPreviewBot, pickLang, pickPlatform, STRINGS } from "@/lib/strings";
 import { Notice } from "../../notice";
 import { Player } from "../../player";
 import { stores } from "../../stores";
@@ -13,19 +13,21 @@ type Props = { params: Promise<{ code: string }> };
 
 async function visitor() {
   const h = await headers();
-  return { lang: pickLang(h.get("accept-language")), platform: pickPlatform(h.get("user-agent")) };
+  const ua = h.get("user-agent");
+  return { lang: pickLang(h.get("accept-language")), platform: pickPlatform(ua), bot: isPreviewBot(ua) };
 }
 
 /** The link preview WhatsApp, iMessage and others draw: the session's
- *  name, its words and its cover. */
+ *  name, its words, and a big picture of its square art (./og). Read from
+ *  the share's card, which counts no view. */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { code } = await params;
-  const share = await fetchShare(code);
+  const share = await fetchCard(code);
   const { lang } = await visitor();
   if (!share) return { title: "Sukun" };
   const title = `${share.title[lang] || share.title.en} · Sukun`;
   const description = share.about[lang] || share.about.en || STRINGS[lang].shared;
-  const image = share.cover ?? "/og.png";
+  const image = { url: `/s/${share.code}/og`, width: 1200, height: 630, alt: title, type: "image/jpeg" };
   return {
     title,
     description,
@@ -36,9 +38,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SharePage({ params }: Props) {
   const { code } = await params;
-  const { lang, platform } = await visitor();
+  const { lang, platform, bot } = await visitor();
   const t = STRINGS[lang];
-  const share = await fetchShare(code);
+  // A bot drawing a preview gets the card: no stream, no view counted.
+  const share = bot ? await fetchCard(code) : await fetchShare(code);
 
   if (!share) {
     return (

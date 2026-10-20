@@ -23,8 +23,10 @@ function bandMask(rtl: boolean): string {
  * The app's progress ring (458:9150): the scene blurred through a
  * ring-shaped glass band (white 20%), the played part in solid white, the
  * knob at its head (51 hairline, 35 white, 19 purple hairline), the time
- * left in the opening, and the title in the hollow. Drag or tap on the
- * ring to seek; arrow keys step ten seconds.
+ * left in the opening, and in the hollow the session's square art, as big
+ * as the ring allows (client 2026-10-20: "show a big picture, like the
+ * square inside the app"), or [children]. Drag or tap on the ring to
+ * seek; arrow keys step ten seconds.
  */
 export function Ring({
   progress,
@@ -33,6 +35,7 @@ export function Ring({
   label,
   onSeek,
   onStep,
+  art,
   children,
 }: {
   progress: number;
@@ -41,6 +44,8 @@ export function Ring({
   label: string;
   onSeek?: (fraction: number) => void;
   onStep: (seconds: number) => void;
+  /** The square art, centred in the ring. */
+  art?: ReactNode;
   children?: ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
@@ -106,6 +111,7 @@ export function Ring({
         <circle cx={head.x} cy={head.y} r={17.5} fill="#fff" />
         <circle cx={head.x} cy={head.y} r={9} fill="none" stroke="#9968EE" strokeWidth={1} />
       </svg>
+      {art ? <div className="ring-art">{art}</div> : null}
       <span className="ring-time">{clock(remaining)}</span>
       {children ? <div className="ring-hollow">{children}</div> : null}
     </div>

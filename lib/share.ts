@@ -107,12 +107,26 @@ export function parseShare(body: unknown): Share | null {
 }
 
 /**
- * One share per request (the page and its preview tags share the call, so
- * a visit counts once). Never cached: the stream token is made per visit.
+ * One share per request, for the person who opened the link: it carries
+ * the stream and counts one view. Never cached: the stream token is made
+ * per visit.
  */
 export const fetchShare = cache(async (code: string): Promise<Share | null> => {
   if (!CODE.test(code)) return null;
   const res = await fetch(`${functionsUrl()}/share/${code}/data`, { cache: "no-store" });
+  if (!res.ok) return null;
+  return parseShare(await res.json().catch(() => null));
+});
+
+/**
+ * The session without its stream, counting no view: for the link's
+ * preview tags, its preview image, and the bots that fetch the page to
+ * draw a preview (so they never use up a link's opens). Cached for a few
+ * minutes: the name and art rarely change.
+ */
+export const fetchCard = cache(async (code: string): Promise<Share | null> => {
+  if (!CODE.test(code)) return null;
+  const res = await fetch(`${functionsUrl()}/share/${code}/card`, { next: { revalidate: 300 } });
   if (!res.ok) return null;
   return parseShare(await res.json().catch(() => null));
 });
