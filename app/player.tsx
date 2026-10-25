@@ -58,6 +58,21 @@ export function Player({
   const [duration, setDuration] = useState(0);
   const [sheet, setSheet] = useState<SheetKind>(null);
   const [toast, setToast] = useState<string | null>(null);
+  // The stream could not load (client 2026-10-25: Play "keeps on
+  // loading"): the spinner stops and, once they have pressed Play, the
+  // page says so. Play asks for the stream again.
+  const [failed, setFailed] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const hlsRef = useRef<{ loadSource(src: string): void } | null>(null);
+
+  // Paused too: an element left "playing" with no data would report
+  // `waiting` again and bring the spinner back.
+  function streamFailed(a: HTMLAudioElement) {
+    setFailed(true);
+    setWantsSound(false);
+    setWaiting(false);
+    a.pause();
+  }
 
   const { stream } = session;
   const previewEnds = Boolean(
@@ -74,9 +89,14 @@ export function Player({
       if (cancelled) return;
       if (Hls.isSupported()) {
         const h = new Hls({ enableWorker: true, maxBufferLength: 30 });
+        // hls.js retries on its own; a fatal error means it has given up.
+        h.on(Hls.Events.ERROR, (_event, data) => {
+          if (data.fatal) streamFailed(a);
+        });
         h.loadSource(stream);
         h.attachMedia(a);
         hls = h;
+        hlsRef.current = h;
       } else if (a.canPlayType("application/vnd.apple.mpegurl")) {
         a.src = stream;
       }
@@ -84,6 +104,7 @@ export function Player({
     return () => {
       cancelled = true;
       hls?.destroy();
+      hlsRef.current = null;
     };
   }, [stream]);
 
@@ -110,6 +131,8 @@ export function Player({
         setWantsSound(false);
         setSheet("end");
       },
+      // iPhone and Safari, playing the playlist themselves.
+      error: () => streamFailed(a),
     };
     for (const [name, fn] of Object.entries(on)) a.addEventListener(name, fn);
     return () => {
@@ -135,6 +158,15 @@ export function Player({
       return;
     }
     if (a.paused) {
+      setPressed(true);
+      if (failed) {
+        setFailed(false);
+        if (hlsRef.current) hlsRef.current.loadSource(stream);
+        else {
+          a.src = stream;
+          a.load();
+        }
+      }
       setWantsSound(true);
       setWaiting(true);
       void a.play().catch(() => {
@@ -258,7 +290,11 @@ export function Player({
         </div>
       </div>
 
-      {toast ? (
+      {failed && pressed ? (
+        <p className="toast" role="alert">
+          {t.cantPlay}
+        </p>
+      ) : toast ? (
         <p className="toast" role="status">
           {toast}
         </p>

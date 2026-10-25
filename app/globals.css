@@ -326,6 +326,14 @@ button { font: inherit; color: inherit; }
   font: 500 14px/20px var(--body);
 }
 
+/* A sentence, not a word: as wide as it needs, inside the screen. */
+.toast[role="alert"] {
+  width: max-content;
+  max-width: calc(100vw - 48px);
+  border-radius: 20px;
+  text-align: center;
+}
+
 /* ---------------------------------------------------------------- sheet */
 /* SukunSheet: the light gradient card floated 4pt off the edges, 36pt top
    and 52pt bottom corners, the white grabber. */
